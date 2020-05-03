@@ -89,10 +89,10 @@ namespace AlbumAPI.DAL
         private Entities.Album toEntity(Model.Album album)
         {
             List<ObjectId> pictures = new List<ObjectId>();
-            foreach(string id in album.Pictures)
-            {
-                pictures.Add(new ObjectId(id));
-            }
+            //foreach(string id in album.Pictures)
+            //{
+            //    pictures.Add(new ObjectId(id));
+            //}
             return new Entities.Album
             {
                 AlbumName = album.Name,
@@ -112,7 +112,7 @@ namespace AlbumAPI.DAL
             {
                 Owner = album.Owner,
                 Name = album.AlbumName,
-                Pictures = pictures
+                Thumbnail = new Model.Picture{ Id = pictures[0] }
             };
         }
 
@@ -121,12 +121,12 @@ namespace AlbumAPI.DAL
             var pictures = album.Pictures.Select(p =>
             {
                 var picture = pictureCollection.Find(p2 => p2.Id == p)
-                .Project(p3 => new Model.Picture
-                {
-                    Id = p3.Id.ToString(),
-                    Link = p3.Link
-                })
-                .SingleOrDefault();
+                   .Project(p3 => new Model.Picture
+                   {
+                       Id = p3.Id.ToString(),
+                       Link = p3.Link
+                   })
+                   .SingleOrDefault();
                 return picture;
             })
             .ToList();
@@ -179,7 +179,27 @@ namespace AlbumAPI.DAL
         public IEnumerable<Model.Album> ListAlbumsOfOwner(string owner)
         {
             var list = albumCollection.Find(a => a.Owner == owner).Project(a => toModel(a)).ToList();
-            return list;
+            var picture = pictureCollection.Find(p2 => p2.Id == new ObjectId(list[0].Thumbnail.Id))
+                .Project(p3 => new Model.Picture
+                {
+                    Id = p3.Id.ToString(),
+                    Link = p3.Link
+                })
+                .SingleOrDefault();
+            var joinedList = list.Select(a =>
+            {
+                var picture = pictureCollection.Find(p2 => p2.Id == new ObjectId(a.Thumbnail.Id))
+                .Project(p3 => new Model.Picture
+                {
+                    Id = p3.Id.ToString(),
+                    Link = p3.Link
+                })
+                .SingleOrDefault();
+                var res = a;
+                res.Thumbnail = picture;
+                return res;
+            });
+            return joinedList;
         }
     }
 }
