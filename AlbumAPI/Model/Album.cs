@@ -11,7 +11,7 @@ namespace AlbumAPI.Model
 
         public string Owner { get; set; }
 
-        public List<string> Pictures { get; set; }
+        public Picture Thumbnail { get; set; }
 
     }
 }
